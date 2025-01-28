@@ -8,6 +8,17 @@ import re
 
 # ----------------------------------------------------- #
 
+# edit accordingly
+
+data_directory = 'data/'                                     # directory containing BeamClusterAnalysis ntuples
+waveform_dir = 'AmBe_waveforms/'                             # directory containing raw AmBe PMT waveforms
+
+file_pattern = re.compile(r'R(\d+)_AmBe\.ntuple\.root')      # Pattern to extract run numbers from the files: R<run_number>_AmBe.ntuple.root -- edit to match your filename pattern
+
+output_filename = 'neutron_candidates.root'                  # name of output root file to be created containing neutron candidates
+
+# ----------------------------------------------------- #
+
 # AmBe neutrons
 def AmBe(CPE, CCB, CT):
     if(CPE<=0 or CPE>70):      # 0 < cluster PE < 100
@@ -75,12 +86,6 @@ def source_loc(run):
 # ----------------------------------------------------- #
 
 # Load Data
-data_directory = 'other_data/' #'data/'
-waveform_dir = 'AmBe_waveforms/'
-
-# Pattern to extract run numbers from the files: R<run_number>_AmBe.ntuple.root
-#file_pattern = re.compile(r'R(\d+)_AmBe\.ntuple\.root')
-file_pattern = re.compile(r'R(\d+)_AmBe_ADC_correction_vFIXED\.ntuple\.root')
 
 file_names = []; run_numbers = []
 
@@ -101,8 +106,15 @@ cluster_time = []; cluster_charge = []; cluster_QB = []; cluster_hits = [];
 hit_times = []; hit_charges = []; hit_ids = []
 source_position = [[], [], []]      # x, y, z
 
+# add any additional arrays you would like. Be sure to:
+#        - create the array
+#        - extract that information from the BeamCluster Trees accordingly
+#        - create output file branch and populate it accordingly
+
 # ----------------------------------------------------- #
 folder_pattern = re.compile(r'^RWM_\d+')    # for the RWM waveform root files
+
+# extracted based on analysis of AmBe PMT waveforms
 
 pulse_start = 300      # adc
 pulse_end = 1200       # adc
@@ -189,19 +201,16 @@ for run in run_numbers:
     cosmic_events = 0; total_events = 0; neutron_cand_count = 0
     with uproot.open(file_names[c1]) as file_1:     # c1 iterated through each loop
         
-        Event = file_1["Event"]
+        Event = file_1["phaseIITankClusterTree"]
         EN = Event["eventNumber"].array()
         ETT = Event["eventTimeTank"].array()
         CT = Event["clusterTime"].array()
         CPE = Event["clusterPE"].array()
         CCB = Event["clusterChargeBalance"].array()
         CH = Event["clusterHits"].array()
-        hT = Event["Cluster_HitT"].array()
-        hPE = Event["Cluster_HitPE"].array()
-        hID = Event["Cluster_HitDetID"].array()
-
-        GTT = Event["GroupedTriggerTime"].array()
-        GTW = Event["GroupedTriggerWord"].array()
+        hT = Event["hitT"].array()
+        hPE = Event["hitPE"].array()
+        hID = Event["hitDetID"].array()
 
         for i in trange(len(EN)):       # loop through aquisitions
 
@@ -257,11 +266,8 @@ print('----------------------------------------------------------------\n')
 print('We have: ', len(cluster_time), ' total AmBe neutron candidates\n')
 
 print('\nWriting to root tree...')
-#os.system('rm neutron_candidates.root')
-#root_file = uproot.create("neutron_candidates.root")
-
-os.system('rm neutron_candidates_ADC_v2.root')
-root_file = uproot.create("neutron_candidates_ADC_v2.root")
+os.system('rm ' + output_filename)
+root_file = uproot.create(output_filename)
 
 tree_data = {
     "cluster_time": cluster_time,

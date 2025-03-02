@@ -40,47 +40,45 @@ def cosmic(CT, CPE):
 # grab source location based on the run number
 def source_loc(run):
     
-    # Port 5 data
-    if run == '4506':
-        xp = 0; yp = 100; zp = 0
-    elif run == '4505':
-        xp = 0; yp = 50; zp = 0
-    elif run == '4499':
-        xp = 0; yp = 0; zp = 0
-    elif run == '4507':
-        xp = 0; yp = -50; zp = 0
-    elif run == '4508':
-        xp = 0; yp = -100; zp = 0
+    run = int(run)
+    
+    source_positions = {
         
-    # Port 1 data
-    elif run == '4593':
-        xp = 0; yp = 100; zp = -75
-    elif run == '4590':
-        xp = 0; yp = 50; zp = -75
-    elif run == '4589':
-        xp = 0; yp = 0; zp = -75
-    elif run == '4596':
-        xp = 0; yp = -50; zp = -75
-    elif run == '4598':
-        xp = 0; yp = -100; zp = -75
+        # Port 5 data
+        4506: (0, 100, 0),
+        4505: (0, 50, 0),
+        4499: (0, 0, 0),
+        4507: (0, -50, 0),
+        4508: (0, -100, 0),
         
-    # Port 4 data
-    elif run == '4656':
-        xp = -75; yp = 100; zp = 0
-    elif run == '4658':
-        xp = -75; yp = 50; zp = 0
-    elif run == '4660':
-        xp = -75; yp = 0; zp = 0
-    elif run == '4662' or run == '4664' or run == '4665' or run == '4666' or run == '4667' or run == '4670':
-        xp = -75; yp = -50; zp = 0
-    elif run == '4678' or run == '4683' or run == '4687':
-        xp = -75; yp = -100; zp = 0
+        # Port 1 data
+        4593: (0, 100, -75),
+        4590: (0, 50, -75),
+        4589: (0, 0, -75),
+        4596: (0, -50, -75),
+        4598: (0, -100, -75),
         
-    else:
-        print('\n##### RUN NUMBER ' + run + 'DOESNT HAVE A SOURCE LOCATION!!! ERROR #####\n')
-        exit()
+        # Port 4 data
+        4656: (-75, 100, 0),
+        4658: (-75, 50, 0),
+        4660: (-75, 0, 0),
+        4662: (-75, -50, 0), 4664: (-75, -50, 0), 4665: (-75, -50, 0), 4666: (-75, -50, 0), 4667: (-75, -50, 0), 4670: (-75, -50, 0),
+        4678: (-75, -100, 0), 4683: (-75, -100, 0), 4687: (-75, -100, 0),
         
-    return xp, yp, zp
+        # Port 3 data
+        4628: (0, 100, 102), 4629: (0, 100, 102),
+        4633: (0, 50, 102),
+        4635: (0, 0, 102), 4636: (0, 0, 102), 4640: (0, 0, 102), 4646: (0, 0, 102),
+        4649: (0, -50, 102),
+        4651: (0, -100, 102),
+        
+    }
+        
+    if run in source_positions:
+        return source_positions[run]
+    
+    print('\n##### RUN NUMBER ' + run + 'DOESNT HAVE A SOURCE LOCATION!!! ERROR #####\n')
+    exit()
 
     
 # ----------------------------------------------------- #
@@ -193,6 +191,8 @@ for run in run_numbers:
           round(100*accepted_events/(accepted_events+rejected_events),2), '%)')
     print(rejected_events, 'waveforms were rejected (', \
           round(100*rejected_events/(accepted_events+rejected_events),2), '%)\n')
+
+    good_events = set(good_events)    # convert list to set to speed computation
 
 
     # Second step, load data

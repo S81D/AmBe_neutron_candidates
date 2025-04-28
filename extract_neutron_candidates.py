@@ -17,6 +17,8 @@ file_pattern = re.compile(r'R(\d+)_AmBe\.ntuple\.root')      # Pattern to extrac
 
 output_filename = 'neutron_candidates.root'                  # name of output root file to be created containing neutron candidates
 
+which_Tree = 1                                               # PhaseIITreeMaker (0) or ANNIEEventTreeMaker (1) tool
+
 # ----------------------------------------------------- #
 
 # AmBe neutrons
@@ -174,7 +176,7 @@ for run in run_numbers:
                         
                         post_pulse_mask = hist_edges[:-1] > pulse_end
                         post_pulse_values = hist_values[post_pulse_mask]
-                        another_pulse = np.any(post_pulse_values > (5 * sigma + baseline))
+                        another_pulse = np.any(post_pulse_values > (7 + sigma + baseline))
                         
                         if not another_pulse:   # there were no other pulses
                             good_events.append(int(timestamp))
@@ -205,6 +207,11 @@ for run in run_numbers:
 
     cosmic_events = 0; total_events = 0; neutron_cand_count = 0
     with uproot.open(file_names[c1]) as file_1:     # c1 iterated through each loop
+
+        if which_Tree == 0:
+            Event = file_1["phaseIITankClusterTree"]
+        else:
+            Event = file_1["Event"]
         
         Event = file_1["phaseIITankClusterTree"]
         EN = Event["eventNumber"].array()
@@ -212,11 +219,19 @@ for run in run_numbers:
         CT = Event["clusterTime"].array()
         CPE = Event["clusterPE"].array()
         CCB = Event["clusterChargeBalance"].array()
-        CN = Event["numberOfClusters"].array()
         CH = Event["clusterHits"].array()
-        hT = Event["hitT"].array()
-        hPE = Event["hitPE"].array()
-        hID = Event["hitDetID"].array()
+
+        if which_Tree == 0:
+            CN = Event["clusterNumber"].array()
+            hT = Event["hitT"].array()
+            hPE = Event["hitPE"].array()
+            hID = Event["hitDetID"].array()
+        else:
+            CN = Event["numberOfClusters"].array()
+            hT = Event["Cluster_HitT"].array()
+            hPE = Event["Cluster_HitPE"].array()
+            hID = Event["Cluster_HitDetID"].array()
+            
 
         for i in trange(len(EN)):       # loop through aquisitions
 

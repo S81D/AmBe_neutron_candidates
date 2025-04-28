@@ -20,12 +20,14 @@ output_filename = 'neutron_candidates.root'                  # name of output ro
 # ----------------------------------------------------- #
 
 # AmBe neutrons
-def AmBe(CPE, CCB, CT):
+def AmBe(CPE, CCB, CT, CN):
     if(CPE<=0 or CPE>70):      # 0 < cluster PE < 100
         return False
     if(CCB>=0.4 or CCB<=0):   # Cluster Charge Balance < 0.4
         return False
     if(CT<2000):              # cluster time not in prompt window
+        return False
+    if(CN!=1):                # only 1 neutron candidate cluster per trigger
         return False
     return True
 
@@ -117,7 +119,10 @@ folder_pattern = re.compile(r'^RWM_\d+')    # for the RWM waveform root files
 pulse_start = 300      # adc
 pulse_end = 1200       # adc
 
-pulse_thresh = 120     # cutoff for "good" pulses, in units of IC
+                       # pulse integrated charge cuts
+pulse_pedestal = 120   # pedestal cut (not used in the script, here for documentation)
+pulse_gamma = 400      # higher-energy peak (4.43 MeV gamma in BGO)
+pulse_max = 1000       # high energy cutoff (arbitrary)
 
 NS_PER_ADC_SAMPLE = 2
 ADC_IMPEDANCE = 50     # Ohms
@@ -164,8 +169,8 @@ for run in run_numbers:
                         
                     IC_adjusted = (NS_PER_ADC_SAMPLE / ADC_IMPEDANCE) * IC
 
-                    # check if the pulse is sufficiently large
-                    if IC_adjusted > pulse_thresh:
+                    # check if the pulse comes from the 4.43 MeV gamma
+                    if pulse_max > IC_adjusted > pulse_gamma:
                         
                         post_pulse_mask = hist_edges[:-1] > pulse_end
                         post_pulse_values = hist_values[post_pulse_mask]
@@ -207,6 +212,7 @@ for run in run_numbers:
         CT = Event["clusterTime"].array()
         CPE = Event["clusterPE"].array()
         CCB = Event["clusterChargeBalance"].array()
+        CN = Event["numberOfClusters"].array()
         CH = Event["clusterHits"].array()
         hT = Event["hitT"].array()
         hPE = Event["hitPE"].array()
@@ -237,7 +243,7 @@ for run in run_numbers:
                         cosmic_events += 1
                         break   # move onto the next event
 
-                    is_neutron = AmBe(CPE[i][k], CCB[i][k], CT[i][k])
+                    is_neutron = AmBe(CPE[i][k], CCB[i][k], CT[i][k], CN[i])
 
                     if(is_neutron==True):
                         if CPE[i][k] != float('-inf'):

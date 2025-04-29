@@ -30,7 +30,7 @@ def AmBe(CPE, CCB, CT, CN):
     if(CT<2000):              # cluster time not in prompt window
         return False
     if(CN!=1):                # only 1 neutron candidate cluster per trigger
-        return False
+        return False          # for the PhaseIITreeMaker, this MUST BE CHANGED --> "clusterNumber" just tags the current cluster. Need to make sure this is the ONLY cluster in the event
     return True
 
 # cosmic muon clusters
